@@ -1,0 +1,68 @@
+job("Task6_Job1") {
+description ("Pulls the code from GitHub")
+  scm{
+    github('akshitverma8191/task3_devops','master')
+  }
+  triggers {
+        scm('* * * * *')
+    }
+  steps {
+    shell('''if mkdir /root/Task6
+    then
+    mkdir /root/Task6
+    fi
+    sudo cp -rvf * /root/Task6/''')
+  }
+}
+
+
+
+job("Task6_Job2") {
+description ("This Job is to deploy the code on top of Kubernetes")
+  triggers {
+    upstream('Task6_Job1','SUCCESS')
+    }
+    steps {
+      shell('''cd /root/Task6
+sudo ls
+if kubectl get all|grep myhtmlweb
+then
+kubectl delete all --all
+kubectl delete pvc --all
+kubectl create -f /root/Task6/htmlwebpvc.yml
+kubectl create -f /root/Task6/htmlwebdeployment.yml
+sleep 10
+kubectl get all
+else
+kubectl create -f /root/Task6/htmlwebpvc.yml
+kubectl create -f /root/Task6/htmlwebdeployment.yml
+sleep 10
+kubectl get all
+fi
+kubectl cp /root/Task6/index.html $(kubectl get pod|grep myhtmlweb|awk '{print$1}'):/usr/local/apache2/htdocs/''')
+    }
+}
+
+job("Task6_Job3") {
+description ("This job is to test the code")
+  triggers {
+    upstream('Task6_Job2','SUCCESS')
+    }
+    steps {
+      shell('''export status=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.99.103:31000)
+if [ $status -eq 200 ]
+then
+exit 0
+else
+exit 1
+fi''')
+    }
+}
+
+buildPipelineView('Task6_Build_View') {
+  title('Task6_Build_View')
+  displayedBuilds(3)
+  selectedJob('Task6_Job1')
+  showPipelineParameters(true)
+  refreshFrequency(2)
+}

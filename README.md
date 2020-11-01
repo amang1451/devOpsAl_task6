@@ -1,0 +1,1 @@
+# taks6_devops
