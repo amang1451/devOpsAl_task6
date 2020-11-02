@@ -7,11 +7,17 @@ description ("Pulls the code from GitHub")
         scm('* * * * *')
     }
   steps {
-    shell('''if mkdir /root/Task6
+    shell('''sudo rm -rf /website
+    sudo mkdir /website
+    if ls | grep .html
     then
-    mkdir /root/Task6
+    sudo cp -r *.html /website/
+    else
+    sudo cp -r *.php /website/
     fi
-    sudo cp -rvf * /root/Task6/''')
+    sudo rm -rf /kubeCode
+    sudo mkdir /kubeCode
+    sudo cp -r *.yml /kubeCode/''')
   }
 }
 
@@ -23,23 +29,46 @@ description ("This Job is to deploy the code on top of Kubernetes")
     upstream('Task6_Job1','SUCCESS')
     }
     steps {
-      shell('''cd /root/Task6
-sudo ls
-if kubectl get all|grep myhtmlweb
+      shell('''if ls /website/ | grep .html
 then
-kubectl delete all --all
-kubectl delete pvc --all
-kubectl create -f /root/Task6/htmlwebpvc.yml
-kubectl create -f /root/Task6/htmlwebdeployment.yml
-sleep 10
-kubectl get all
+if
+kubectl get pvc | grep htmlwebpvc
+then
+echo “pvc already exist”
+kubectl apply -f /kubeCode/htmlwebpvc.yml
 else
-kubectl create -f /root/Task6/htmlwebpvc.yml
-kubectl create -f /root/Task6/htmlwebdeployment.yml
-sleep 10
-kubectl get all
+kubectl create -f /kubeCode/htmlwebpvc.yml
+sleep 5
 fi
-kubectl cp /root/Task6/index.html $(kubectl get pod|grep myhtmlweb|awk '{print$1}'):/usr/local/apache2/htdocs/''')
+if kubectl get deployment | grep myhtmlweb
+then
+echo “deployment already exist”
+kubectl apply -f /kubeCode/htmlwebdeployment.yml
+else
+kubectl create -f /kubeCode/htmlwebdeployment.yml
+sleep 15
+kubectl cp /website/* $(kubectl get pods -o=jsonpath=’{.items[0].metadata.name}’):/usr/local/apache2/htdocs/
+fi
+else
+if
+kubectl get pvc | grep phpwebpvc
+then
+echo “pvc already exist”
+kubectl apply -f /kubeCode/phpwebpvc.yml
+else
+kubectl create -f /kubeCode/phpwebpvc.yml
+sleep 5
+fi
+if kubectl get deployment | grep myphpweb
+then
+echo “deployment already exist”
+kubectl apply -f /kubeCode/phpwebdeployment.yml
+else
+kubectl create -f /kubeCode/phpwebdeployment.yml
+sleep 15
+kubectl cp /website/* $(kubectl get pods -o=jsonpath=’{.items[0].metadata.name}’):/var/www/html/
+fi
+fi''')
     }
 }
 
@@ -49,7 +78,7 @@ description ("This job is to test the code")
     upstream('Task6_Job2','SUCCESS')
     }
     steps {
-      shell('''export status=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.99.103:31000)
+      shell('''export status=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.99.100:31000)
 if [ $status -eq 200 ]
 then
 exit 0
