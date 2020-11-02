@@ -29,7 +29,9 @@ description ("This Job is to deploy the code on top of Kubernetes")
     upstream('Task6_Job1','SUCCESS')
     }
     steps {
-      shell('''if ls /website/ | grep .html
+      shell('''kubectl delete all --all
+kubectl delete pvc --all
+if ls /website/ | grep .html
 then
 if
 kubectl get pvc | grep htmlwebpvc
