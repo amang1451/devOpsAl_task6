@@ -1,7 +1,7 @@
 job("Task6_Job1") {
 description ("Pulls the code from GitHub")
   scm{
-    github('amang1451/devOpsAl_task6','master')
+    github('amang1451/devOpsAl_task3','master')
   }
   triggers {
         scm('* * * * *')
