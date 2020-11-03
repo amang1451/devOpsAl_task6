@@ -90,7 +90,7 @@ fi''')
     }
 }
 
-buildPipelineView('Task6_Build_View') {
+buildPipelineView('devOpsAl_Task6_Build_View') {
   title('Task6_Build_View')
   displayedBuilds(3)
   selectedJob('Task6_Job1')
