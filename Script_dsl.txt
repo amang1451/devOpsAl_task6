@@ -49,7 +49,7 @@ kubectl apply -f /kubeCode/htmlwebdeployment.yml
 else
 kubectl create -f /kubeCode/htmlwebdeployment.yml
 sleep 15
-kubectl cp /website/* $(kubectl get pods -o=jsonpath=’{.items[0].metadata.name}’):/usr/local/apache2/htdocs/
+kubectl cp /website/* $(kubectl get pods -o=jsonpath={.items[0].metadata.name}):/usr/local/apache2/htdocs/
 fi
 else
 if
@@ -68,7 +68,7 @@ kubectl apply -f /kubeCode/phpwebdeployment.yml
 else
 kubectl create -f /kubeCode/phpwebdeployment.yml
 sleep 15
-kubectl cp /website/* $(kubectl get pods -o=jsonpath=’{.items[0].metadata.name}’):/var/www/html/
+kubectl cp /website/* $(kubectl get pods -o=jsonpath={.items[0].metadata.name}):/var/www/html/
 fi
 fi''')
     }
